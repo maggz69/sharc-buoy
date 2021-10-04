@@ -2,7 +2,9 @@ import csv
 import socket
 import sys
 
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+requests_recieved = 0
 
 
 def setupListeningServer():
@@ -14,14 +16,18 @@ def setupListeningServer():
     sock.listen(1)
     print("Server listening")
 
-    while True:
+
+    while requests_recieved < 2:
         connection, client_address = sock.accept()
         retrieveConnectionData(connection, client_address)
 
 
 # Parse the recieved data to read the csv fil sent such that it can be sent back
 def retrieveConnectionData(connection, client_address):
+    global requests_recieved
     print("Some data has been recieved")
+    requests_recieved += 1
+
     fragments = []
     iterations = 1
     while True:
@@ -37,31 +43,26 @@ def retrieveConnectionData(connection, client_address):
     print("Chunks hae been recieved")
     connection.close()
 
+    data = b" ".join(fragments)
+
     print("Recieved data from\t{}".format(client_address))
     print("\n Data Recieved \n")
-    print(b" ".join(fragments))
+
+    print(data)
+
+    readData(data)
 
 
 # read csv data into list of lists
-def readData():
-    # Reads each row of CSV file; skips headers
-    file = open("raw_data.csv")  # Set this name to the name of the file received
-    csvreader = csv.reader(file)
-    csvData = []
-    for line in csvreader:
-        csvData.append(line)
-
-    file.close()
-
-    # Rows are read from CSV file as lists; this converts them to string and splits them to get list of lists
-    data = []
-    for i in range(len(csvData)):
-        if i > 1:
-            data.append(str(csvData[i]).split()[1:-1])
+def readData(data):
+    # break the byte data into lines
+    
+    split_data = data.split(b"\n")
+    line_data = split_data[1:-1]
 
     # The last line contains string "computer utc end etc"; remove to perform fft
-    data.remove(data[-1])
-    # return data
+    line_data.remove(data[-1])
+    return line_data
 
 
 # Placing data into a buffer after reading as the data is read as list of lists
