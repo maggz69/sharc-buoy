@@ -29,7 +29,7 @@ debug_graphs  = False
 
 def setupListeningServer():
     # create a socket and specify the address and ports
-    HOST = ("0.0.0.0", 9999)
+    HOST = ("localhost", 9999)
     sock.bind(HOST)
 
     # set the socket to accept incoming req
@@ -68,37 +68,12 @@ def retrieveConnectionData(connection, client_address):
     data = b" ".join(fragments)
 
     print("Recieved data from\t{}".format(client_address))
-    # print("\n Data Recieved \n")
 
-    # print(data)
-
+    # Obtain compressed Fourier Data
     output_fourier =  readData(data)
 
-    compressed_data_file  = open('compressed_data.txt','w')
-    encrypted_data_file = open('encrypted_data.txt','w')
-    
-    aes = pyaes.AESModeOfOperationCTR(key.encode('utf8'))
-
-
-    for row in output_fourier:
-        for el in row:
-            # Get the fourier data transform of the row for a specific data point
-            data_element = str(el)[1:-1]
-            
-            # Write the unencrypted data point
-            compressed_data_file.write(data_element)
-            # Write the encrypted data point
-            encrypted_data_file.write(str(aes.encrypt(data_element)))
-        
-            # separate the encrypted and unencrypted data points
-            encrypted_data_file.write(" ")
-            compressed_data_file.write(" ")
-        # introduce a new line character to proceed to the next row
-        encrypted_data_file.write("\n")    
-        compressed_data_file.write("\n")
-    
-    compressed_data_file.close()
-    encrypted_data_file.close()
+    # Write the fourier data and encrypt it per file
+    writeDataToText(output_fourier)
 
     compressed_file_size = os.path.getsize("compressed_data.txt")
     original_filze_size = os.path.getsize("raw_data.csv")
@@ -106,27 +81,48 @@ def retrieveConnectionData(connection, client_address):
     print(f"Original file size \t {original_filze_size} \nCompressed File Size\t {compressed_file_size} \nSaved Data is roughly {(original_filze_size - compressed_file_size)/1e6} KB")
 
 
-    # start_time = time.perf_counter()
-
-    # #encrypt single stream of data
-    # file  = open('compressed_data.txt','r')
-    # unencrypted = file.read()
-    # encrypted = encryptUsingAlgo(unencrypted,'ctr')
-
-    # end_time = time.perf_counter()
-
-    # print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
-
-    # file = open('encrypted_data.txt','w')
-    # file.write(encrypted.hex())
-    # file.close()
-
-    encrypted_data_file = open('encrypted_data.txt','r')
-    encrypted_data = encrypted_data_file.read()
-    encrypted_data_file.close()
     
-    sendEncryptedDataBack(encrypted_data)
 
+    #encrypt single stream of data
+    file  = open('compressed_data.txt','r')
+    unencrypted = file.read()
+    
+    start_time = time.perf_counter()
+    encrypted = encryptUsingAlgo(unencrypted,'ctr')
+    end_time = time.perf_counter()
+
+    print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n")
+
+    file = open('encrypted_data.txt','w',encoding='latin-1')
+    file.write(encrypted.decode('latin-1'))
+    file.close()
+
+    file = open('benchmark.csv','a')
+
+    file.write('ctr ,')
+    file.write(str(end_time - start_time))
+    file.write(',')
+
+    file.write(str(os.path.getsize("encrypted_data.txt")/1000))
+    file.close()
+
+    # encrypted_data_file = open('encrypted_data.txt','r')
+    # encrypted_data = encrypted_data_file.read()
+    # encrypted_data_file.close()
+
+    # sendEncryptedDataBack(encrypted_data)
+
+def writeDataToText(fourier_data):
+    compressed_data_file  = open('compressed_data.txt','w')
+
+    for row in fourier_data:
+        for el in row:
+            data_element = str(el)[1:-1]
+            compressed_data_file.write(data_element)
+            compressed_data_file.write(" ")   
+        compressed_data_file.write("\n")
+    
+    compressed_data_file.close()
 
 def sendEncryptedDataBack(encrypted_data):
     global pc_ip
@@ -175,20 +171,6 @@ def readData(data):
         times.append(i)
 
     return compress(data, times, dataTypes) 
-
-# Placing data into a buffer after reading as the data is read as list of lists
-# Zlib library cannot work with lists (only uses byte-type data) hence textfile
-# Can send this buffer file back to pi for compression/enryption
-# *** Temporary solution ***
-# def buffer(input):
-#     file = open("buffer.txt", "w")
-#     for ele in input:
-#         for i in range(len(ele)):
-#             if i == len(ele) - 1:
-#                 file.write(ele[i] + "\n")
-#             else:
-#                 file.write(ele[i] + ", ")
-#     file.close()
 
 def compress(inputData, inputTimes, dataHeaders):
     N = len(inputTimes)
@@ -243,27 +225,6 @@ def lowpass(fftData):
     return compressFFT
 
 
-
-def decryptUsingAlgo(string_to_decrypt, algo='ecb'):
-    print("Running the block encryption")
-
-    if algo == 'ctr':
-        encryption_type = 'stream cipher'
-        aes = pyaes.AESModeOfOperationCTR(key)
-    if algo == 'ecb':
-        encryption_type = 'block cipher'
-        aes = pyaes.AESModeOfOperationECB(key)
-
-
-    start_time = time.perf_counter()
-    decrypted = aes.encrypt(string_to_decrypt)
-    end_time = time.perf_counter()
-
-    print("Decrypted String \n", decrypted)
-    print("Results of performing {} {} ".format(algo,encryption_type))
-    print("\t duration:", start_time - end_time)
-
-
 def writeResultToCsv(length_of_data, action, encryption_algo, time_taken):
     file = open(filename, "r")
     content = file.read()
@@ -315,3 +276,10 @@ def encryptUsingAlgo(string_to_encrypt, algo='ecb'):
 if __name__ == "__main__":
     print("Setting up a server :)")
     setupListeningServer()
+
+    # data_file = open('raw_data.csv','r')
+    # raw_data = data_file.read()
+    # data_file.close()
+
+    # fourier_data = readData(raw_data)
+    # writeDataToText(fourier_data)
