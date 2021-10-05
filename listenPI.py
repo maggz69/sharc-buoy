@@ -1,9 +1,26 @@
 import csv
+import os
 import socket
 import sys
 from scipy.fft import fft, fftfreq
 import numpy as np
 import matplotlib as plt
+import pyaes
+import time
+import datetime
+
+
+pc_ip = ""
+pc_port = "9998"
+
+# the encryption and decryption key
+key = "abhijit#4387926131r513f124597851"
+
+# initialization vector
+iv = '1234567891112131'
+
+# file to save the benchmark
+filename = "benchmark.csv"
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,6 +46,8 @@ def setupListeningServer():
 
 # Parse the recieved data to read the csv fil sent such that it can be sent back
 def retrieveConnectionData(connection, client_address):
+    global pc_ip
+    pc_ip = client_address[0]
     global requests_recieved
     print("Some data has been recieved")
     requests_recieved += 1
@@ -58,12 +77,50 @@ def retrieveConnectionData(connection, client_address):
     output_fourier =  readData(data)
 
     file  = open('compressed_data.txt','w')
+    count = 0
     for row in output_fourier:
-        file.write(str(row))
+        for el in row:
+            file.write(str(el)[1:-1])
+            file.write(" ")
         file.write("\n")
-        
     file.close()
 
+    compressed_file_size = os.path.getsize("compressed_data.txt")
+    original_filze_size = os.path.getsize("raw_data.csv")
+
+    print(f"Original file size \t {original_filze_size} \nCompressed File Size\t {compressed_file_size} \nSaved Data is roughly {(original_filze_size - compressed_file_size)/1e6} KB")
+
+    print("Performing Encryption Now")
+
+    encrypted_data = ''
+
+    start_time = time.perf_counter()
+
+    #encrypt single stream of data
+    file  = open('compressed_data.txt','r')
+    unencrypted = file.read()
+    encrypted = encryptUsingAlgo(unencrypted,'ctr')
+
+    end_time = time.perf_counter()
+
+    print(f"Time taken to encrypt data by file \n\t {end_time - start_time}")
+
+    sendEncryptedDataBack(encrypted)
+
+
+def sendEncryptedDataBack(encrypted_data):
+    global pc_ip
+    
+    sending_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        # Connect to server and send data
+        sending_sock.connect((pc_ip, int(pc_port)))
+        sending_sock.sendall(bytes(encrypted_data))
+
+        sending_sock.close()
+
+    print("Sent Data Back to the PC")
 
 # read csv data into list of lists
 def readData(data):
@@ -163,6 +220,80 @@ def lowpass(fftData):
         compressFFT.append(fftData[i])
     
     return compressFFT
+
+
+
+def decryptUsingAlgo(string_to_decrypt, algo='ecb'):
+    if algo == 'ctr':
+        encryption_type = 'stream cipher'
+        aes = pyaes.AESModeOfOperationCTR(key)
+    if algo == 'ecb':
+        encryption_type = 'block cipher'
+        aes = pyaes.AESModeOfOperationECB(key)
+
+    start_time = time.perf_counter()
+    decrypted = aes.encrypt(string_to_decrypt)
+    end_time = time.perf_counter()
+
+    print("Decrypted String \n", decrypted)
+    print("Results of performing {} {} ".format(algo,encryption_type))
+    print("\t duration:", start_time - end_time)
+
+
+def writeResultToCsv(length_of_data, action, encryption_algo, time_taken):
+    file = open(filename, "r")
+    content = file.read()
+    file.close()
+
+    file = open(filename,"a")
+
+    # Create a Header To Store The Column Names
+    if not content:
+        file.write(
+            "Length of Data,Action taken,Encryption Algorithm Used, Time Taken,Date Run")
+
+    file.write('\n'+str(length_of_data)+"," + action + "," +
+               encryption_algo + "," + str(time_taken) +","+ datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S"))
+    file.close()
+
+
+def encryptUsingAlgo(string_to_encrypt, algo='ecb'):
+    ciphertext = None
+    if algo == 'ctr':
+        encryption_type = 'stream cipher'
+        aes = pyaes.AESModeOfOperationCTR(key.encode('utf8'))
+    if algo == 'cbc':
+        encryption_type = 'block cipher'
+        aes = pyaes.AESModeOfOperationCBC(key.encode('utf8'))
+        encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationCBC(key.encode('utf8'),iv))
+
+        ciphertext = encrypter.feed(string_to_encrypt)
+        ciphertext += encrypter.feed()
+    if algo == 'ecb':
+        encryption_type = 'block cipher'
+        aes = pyaes.AESModeOfOperationECB(key.encode('utf8'))
+        encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationECB(key.encode('utf8')))
+
+        ciphertext = encrypter.feed(string_to_encrypt)
+        ciphertext += encrypter.feed()
+    
+
+    start_time = time.perf_counter()
+
+    if ciphertext is not None:
+        encrypted = aes.encrypt(ciphertext)
+    else:
+        encrypted = aes.encrypt(string_to_encrypt)
+
+    return encrypted
+
+    # end_time = time.perf_counter()
+
+    # print("Encrypted String", encrypted)
+    # print("Results of performing {} {} ".format(algo,encryption_type))
+    # print("\t duration : {} \n".format(start_time - end_time))
+
+    # writeResultToCsv(len(string_to_encrypt),'Encryption',algo,end_time - start_time)
 
 if __name__ == "__main__":
     print("Setting up a server :)")

@@ -47,3 +47,5 @@ def retrieveConnectionData(connection, client_address):
     print("\n Data Recieved \n")
 
     print(data)
+
+setupListeningServer()
