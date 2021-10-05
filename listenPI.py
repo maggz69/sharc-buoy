@@ -1,3 +1,4 @@
+import binascii
 import csv
 import os
 import socket
@@ -31,7 +32,7 @@ debug_graphs  = False
 
 def setupListeningServer():
     # create a socket and specify the address and ports
-    HOST = ("localhost", 9999)
+    HOST = ("0.0.0.0", 9999)
     sock.bind(HOST)
 
     # set the socket to accept incoming req
@@ -104,7 +105,7 @@ def retrieveConnectionData(connection, client_address):
     print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
 
     file = open('encrypted_data.txt','w')
-    file.write(str(encrypted))
+    file.write(encrypted.hex())
     file.close()
 
     sendEncryptedDataBack(encrypted)
@@ -118,7 +119,7 @@ def sendEncryptedDataBack(encrypted_data):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         # Connect to server and send data
         sending_sock.connect((pc_ip, int(pc_port)))
-        sending_sock.sendall(bytes(encrypted_data))
+        sending_sock.sendall(bytes(encrypted_data.hex(),encoding='utf-8'))
 
         sending_sock.close()
 
