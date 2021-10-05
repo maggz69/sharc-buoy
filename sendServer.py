@@ -12,7 +12,7 @@ def readData():
 
 # send data to listening server
 def sendDataToPi(data):
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "192.168.0.154", 9999
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Create a socket (SOCK_STREAM means a TCP socket)

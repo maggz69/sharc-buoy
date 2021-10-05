@@ -7,7 +7,7 @@ requests_recieved = 0
 
 def setupListeningServer():
     # create a socket and specify the address and ports
-    HOST = ("localhost", 9998)
+    HOST = ("0.0.0.0", 9998)
     sock.bind(HOST)
 
     # set the socket to accept incoming req

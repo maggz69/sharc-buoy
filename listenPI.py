@@ -92,8 +92,6 @@ def retrieveConnectionData(connection, client_address):
 
     print("Performing Encryption Now")
 
-    encrypted_data = ''
-
     start_time = time.perf_counter()
 
     #encrypt single stream of data
@@ -103,14 +101,18 @@ def retrieveConnectionData(connection, client_address):
 
     end_time = time.perf_counter()
 
-    print(f"Time taken to encrypt data by file \n\t {end_time - start_time}")
+    print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
+
+    file = open('encrypted_data.txt','w')
+    file.write(encrypted)
+    file.close()
 
     sendEncryptedDataBack(encrypted)
 
 
 def sendEncryptedDataBack(encrypted_data):
     global pc_ip
-    
+
     sending_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
