@@ -104,7 +104,7 @@ def retrieveConnectionData(connection, client_address):
     print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
 
     file = open('encrypted_data.txt','w')
-    file.write(encrypted)
+    file.write(str(encrypted))
     file.close()
 
     sendEncryptedDataBack(encrypted)
