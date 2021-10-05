@@ -1,8 +1,5 @@
-import binascii
-import csv
 import os
 import socket
-import sys
 from scipy.fft import fft, fftfreq
 import numpy as np
 import matplotlib as plt
@@ -77,38 +74,55 @@ def retrieveConnectionData(connection, client_address):
 
     output_fourier =  readData(data)
 
-    file  = open('compressed_data.txt','w')
-    count = 0
+    compressed_data_file  = open('compressed_data.txt','w')
+    encrypted_data_file = open('encrypted_data.txt','w')
+    
+    aes = pyaes.AESModeOfOperationCTR(key.encode('utf8'))
+
+
     for row in output_fourier:
         for el in row:
-            file.write(str(el)[1:-1])
-            file.write(" ")
-        file.write("\n")
-    file.close()
+            # Get the fourier data transform of the row for a specific data point
+            data_element = str(el)[1:-1]
+            
+            # Write the unencrypted data point
+            compressed_data_file.write(data_element)
+            # Write the encrypted data point
+            encrypted_data_file.write(aes.encrypt(data_element))
+        
+            # separate the encrypted and unencrypted data points
+            encrypted_data_file.write(" ")
+            compressed_data_file.write(" ")
+        # introduce a new line character to proceed to the next row
+        encrypted_data_file.write("\n")    
+        compressed_data_file.write("\n")
+    encrypted_data = encrypted_data_file.read()
+    
+    compressed_data_file.close()
+    encrypted_data_file.close()
 
     compressed_file_size = os.path.getsize("compressed_data.txt")
     original_filze_size = os.path.getsize("raw_data.csv")
 
     print(f"Original file size \t {original_filze_size} \nCompressed File Size\t {compressed_file_size} \nSaved Data is roughly {(original_filze_size - compressed_file_size)/1e6} KB")
 
-    print("Performing Encryption Now")
 
-    start_time = time.perf_counter()
+    # start_time = time.perf_counter()
 
-    #encrypt single stream of data
-    file  = open('compressed_data.txt','r')
-    unencrypted = file.read()
-    encrypted = encryptUsingAlgo(unencrypted,'ctr')
+    # #encrypt single stream of data
+    # file  = open('compressed_data.txt','r')
+    # unencrypted = file.read()
+    # encrypted = encryptUsingAlgo(unencrypted,'ctr')
 
-    end_time = time.perf_counter()
+    # end_time = time.perf_counter()
 
-    print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
+    # print(f"Time taken to encrypt data by file \n\t {end_time - start_time} \n {encrypted}")
 
-    file = open('encrypted_data.txt','w')
-    file.write(encrypted.hex())
-    file.close()
+    # file = open('encrypted_data.txt','w')
+    # file.write(encrypted.hex())
+    # file.close()
 
-    sendEncryptedDataBack(encrypted)
+    sendEncryptedDataBack(encrypted_data)
 
 
 def sendEncryptedDataBack(encrypted_data):
