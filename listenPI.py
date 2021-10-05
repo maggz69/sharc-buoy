@@ -227,12 +227,15 @@ def lowpass(fftData):
 
 
 def decryptUsingAlgo(string_to_decrypt, algo='ecb'):
+    print("Running the block encryption")
+
     if algo == 'ctr':
         encryption_type = 'stream cipher'
         aes = pyaes.AESModeOfOperationCTR(key)
     if algo == 'ecb':
         encryption_type = 'block cipher'
         aes = pyaes.AESModeOfOperationECB(key)
+
 
     start_time = time.perf_counter()
     decrypted = aes.encrypt(string_to_decrypt)
@@ -261,42 +264,35 @@ def writeResultToCsv(length_of_data, action, encryption_algo, time_taken):
 
 
 def encryptUsingAlgo(string_to_encrypt, algo='ecb'):
+    
+    print("Started the encryption using algo function")
+
     ciphertext = None
     if algo == 'ctr':
-        encryption_type = 'stream cipher'
         aes = pyaes.AESModeOfOperationCTR(key.encode('utf8'))
     if algo == 'cbc':
-        encryption_type = 'block cipher'
         aes = pyaes.AESModeOfOperationCBC(key.encode('utf8'))
         encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationCBC(key.encode('utf8'),iv))
 
         ciphertext = encrypter.feed(string_to_encrypt)
         ciphertext += encrypter.feed()
     if algo == 'ecb':
-        encryption_type = 'block cipher'
         aes = pyaes.AESModeOfOperationECB(key.encode('utf8'))
         encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationECB(key.encode('utf8')))
 
         ciphertext = encrypter.feed(string_to_encrypt)
         ciphertext += encrypter.feed()
-    
 
-    start_time = time.perf_counter()
+    print("Finished defining the algo")
+    
 
     if ciphertext is not None:
         encrypted = aes.encrypt(ciphertext)
     else:
         encrypted = aes.encrypt(string_to_encrypt)
 
+    print("Encryption finished")
     return encrypted
-
-    # end_time = time.perf_counter()
-
-    # print("Encrypted String", encrypted)
-    # print("Results of performing {} {} ".format(algo,encryption_type))
-    # print("\t duration : {} \n".format(start_time - end_time))
-
-    # writeResultToCsv(len(string_to_encrypt),'Encryption',algo,end_time - start_time)
 
 if __name__ == "__main__":
     print("Setting up a server :)")

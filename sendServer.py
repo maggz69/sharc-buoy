@@ -21,6 +21,7 @@ def sendDataToPi(data):
         sock.connect((HOST, PORT))
         sock.sendall(bytes(data + "\n", "utf-8"))
 
+        # recv = sock.recv(1024)
         sock.close()
 
     print("Finished sending data to the socket")
