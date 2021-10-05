@@ -145,7 +145,8 @@ def readData(data):
                 row = str(line_data[i]).split(" ")[1:-1]
                 data.append(np.double(row))
         except:
-            print(f":( {i}")
+            # print(f":( {i}")
+            pass
 
     # Removes unwanted string elements (whitespace, etc.) from data types
     for i in range(len(dataTypes)):
