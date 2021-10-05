@@ -88,7 +88,7 @@ def retrieveConnectionData(connection, client_address):
             # Write the unencrypted data point
             compressed_data_file.write(data_element)
             # Write the encrypted data point
-            encrypted_data_file.write(aes.encrypt(data_element))
+            encrypted_data_file.write(str(aes.encrypt(data_element)))
         
             # separate the encrypted and unencrypted data points
             encrypted_data_file.write(" ")
@@ -96,7 +96,6 @@ def retrieveConnectionData(connection, client_address):
         # introduce a new line character to proceed to the next row
         encrypted_data_file.write("\n")    
         compressed_data_file.write("\n")
-    encrypted_data = encrypted_data_file.read()
     
     compressed_data_file.close()
     encrypted_data_file.close()
@@ -122,6 +121,10 @@ def retrieveConnectionData(connection, client_address):
     # file.write(encrypted.hex())
     # file.close()
 
+    encrypted_data_file = open('encrypted_data.txt','r')
+    encrypted_data = encrypted_data_file.read()
+    encrypted_data_file.close()
+    
     sendEncryptedDataBack(encrypted_data)
 
 
