@@ -8,7 +8,7 @@ file_name = "raw_data.csv"
 def readData():
     file = open(file_name, "r")
 
-    lines = 40
+    lines = 20
     data = ''.join(file.readlines()[0:lines])
 
     return data
