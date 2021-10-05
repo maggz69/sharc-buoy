@@ -7,7 +7,11 @@ file_name = "raw_data.csv"
 
 def readData():
     file = open(file_name, "r")
-    return file.read()
+
+    lines = 40
+    data = ''.join(file.readlines()[0:lines])
+
+    return data
 
 
 # send data to listening server
@@ -24,7 +28,7 @@ def sendDataToPi(data):
         # recv = sock.recv(1024)
         sock.close()
 
-    print("Finished sending data to the socket")
+    print("Finished sending data to the socket \n\n",data)
 
 
 if __name__ == "__main__":
