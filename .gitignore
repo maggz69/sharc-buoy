@@ -1,3 +1,4 @@
 .vscode/*
 compressed_data.txt
 encrypted_data.txt
+__pycache__
