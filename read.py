@@ -114,6 +114,8 @@ def writeEncryptedToFile(encrypted_data):
 def compressEncryptDataThread(compressed_data):
     fourier_data = []
 
+
+    start_compress_time = time.perf_counter()
     fourier_data = compress.compressRow(compressed_data)
     # Generate Fourier Data
     # for row in compressed_data:
@@ -125,8 +127,19 @@ def compressEncryptDataThread(compressed_data):
     # Fourier Str
     compressed_str = np.array_str(np.array(fourier_lp))
 
+    end_compress_time = time.perf_counter()
     encrypted_data = encrypt.encryptFourierData(compressed_str)
     writeEncryptedToFile(encrypted_data)
+    end_encrypt_time = time.perf_counter()
+
+    file = open('timing_data.csv','a+')
+    file.write(str(sys.getsizeof(compressed_data)))
+    file.write(',')
+    file.write(str(start_compress_time - end_compress_time))
+    file.write(',')
+    file.write(str(end_compress_time - end_encrypt_time))
+    file.write('\n')
+    file.close
 
     sys.exit()
 
