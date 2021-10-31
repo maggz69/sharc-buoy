@@ -16,9 +16,6 @@ def compressRow(dataRow):
     # Loop through the data list passed and fourier transform the data
     # This is ideally similar to  gyro x,y,z : acc x,y,z
 
-    print(f"Data row \n", dataRow)
-    sys.stdout.flush()
-
     compressed_row_array = np.array(dataRow)
     compressed_row = fft(compressed_row_array)
 
