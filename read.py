@@ -102,6 +102,12 @@ def writeRowToFile(file, time, gyro_data, mag_data, acc_data):
 
     file.write("\n")
 
+def writeEncryptedToFile(encrypted_data):
+    file = open('encrypted_txt.txt','a')
+    file.write(encrypted_data)
+    file.close()
+
+    print("Encrypted data has been written")
 
 def compressEncryptDataThread(compressed_data):
     fourier_data = []
@@ -117,6 +123,7 @@ def compressEncryptDataThread(compressed_data):
     compressed_str = np.array_str(fourier_lp)
 
     encrypted_data = encrypt.encryptFourierData(compressed_str)
+    writeEncryptedToFile(encrypted_data)
 
     sys.exit()
 
