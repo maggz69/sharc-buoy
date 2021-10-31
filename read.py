@@ -1,12 +1,19 @@
 import time
 import imu
-import datetime
+import threading
+import encrypt
+import compress
+import numpy as np
+import sys
 
 global sensor
 
 
 def initialize():
-    global sensor
+    global sensor, compressed_data, last_buffer_expunge_time
+
+    compressed_data = []
+
     sensor = imu.ICM20948()
     print("Retrieving Data From IMU Sensor :)")
 
@@ -95,20 +102,57 @@ def writeRowToFile(file, time, gyro_data, mag_data, acc_data):
     file.write("\n")
 
 
+def compressEncryptDataThread(compressed_data):
+    fourier_data = []
+
+    # Generate Fourier Data
+    for row in compressed_data:
+        fourier_data.append(compress.compressRow(row))
+
+    # Perform Low Pass
+    fourier_lp = compress.lowPass(fourier_data)
+
+    # Fourier Str
+    compressed_str = np.array_str(fourier_lp)
+
+    encrypted_data = encrypt.encryptFourierData(compressed_str)
+
+    sys.exit()
+
+
+def appendRowToBuffer(row):
+    global compressed_data, last_buffer_expunge_time
+
+    current_time = time.perf_counter()
+
+    compressed_data.append(row)
+
+    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 60 * 60):
+        compression_thread = threading.Thread(
+            target=compressEncryptDataThread, args=(compressed_data))
+        compressed_data = []
+        last_buffer_expunge_time = current_time
+
+
 if __name__ == "__main__":
-    
+
     # Determine whether to log data
     logging_data = askToLogData()
-    
+
     initialize()
 
     if(logging_data == True):
         log_file = open('imu_data.csv', 'w')
         log_file.write("Time,Gyrometer,Magnenometer,Accelerometer\n")
 
-    for i in range(60):
+    while True:
 
         [gyro_data, acc_data, mag_data] = readData()
+
+        # append data to buffer
+
+        appendRowToBuffer([gyro_data[0], gyro_data[1], gyro_data[2], acc_data[0],
+                          acc_data[1], acc_data[2], mag_data[0], mag_data[1], mag_data[2]])
 
         # print the current time in gmt
         ct = time.gmtime()
@@ -124,7 +168,7 @@ if __name__ == "__main__":
         print("")
 
         if(logging_data):
-            writeRowToFile(file=log_file,time=formatted_time, gyro_data=gyro_data,
+            writeRowToFile(file=log_file, time=formatted_time, gyro_data=gyro_data,
                            acc_data=acc_data, mag_data=mag_data)
 
-        time.sleep(1)
+        time.sleep(10)
