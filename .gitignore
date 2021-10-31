@@ -2,6 +2,6 @@
 compressed_data.txt
 encrypted_data.txt
 __pycache__
-test.py
+/test.py
 workspace.code-workspace
 encrypted_txt.txt
