@@ -12,6 +12,7 @@ global sensor
 def initialize():
     global sensor, compressed_data, last_buffer_expunge_time
 
+    last_buffer_expunge_time = None
     compressed_data = []
 
     sensor = imu.ICM20948()

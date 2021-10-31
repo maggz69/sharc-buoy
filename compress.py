@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.fft import fft, fftfreq
+from scipy.fftpack import fft, fftfreq
 
 # Author: Mathew January, Pius Gumo
 # Compression algorithm v2
