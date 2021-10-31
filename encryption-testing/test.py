@@ -20,14 +20,14 @@ def compareAllAlgo():
 
     
 
-    chart_plot_1 = rsa_data.plot.scatter(x='rows',y='encryption_elapsed_time',c='Blue',marker='+')
+    chart_plot_1 = aes_data.plot.scatter(x='rows',y='encryption_elapsed_time',c='Blue',marker='+')
 
-    aes_data.plot.scatter(ax=chart_plot_1,x='rows',y='encryption_elapsed_time',c='Orange',marker='+')
+    rsa_data.plot.scatter(ax=chart_plot_1,x='rows',y='encryption_elapsed_time',c='Orange',marker='+')
     
     des_data.plot.scatter(ax=chart_plot_1,x='rows',y='encryption_elapsed_time',c='Yellow',marker='+')
 
     plt.title("Comparing all the different algorithms")
-    plt.legend(['RSA','AES','DES'])
+    plt.legend(['AES','RSA','DES'])
     plt.savefig('all_encryption_comparison.png')
 
 def runAES():
@@ -142,9 +142,9 @@ def runDes():
     data.to_csv('des_cbc_time_comparison.csv',mode='w+')
 
 if __name__ == "__main__":
-    # runDes()
-    # runAES()
-    # runRSA()
+    #runDes()
+    #runAES()
+    #runRSA()
     
     compareAllAlgo()
 
