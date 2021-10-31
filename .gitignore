@@ -1,6 +1,7 @@
 .vscode/*
 compressed_data.txt
 encrypted_data.txt
+timing_data.csv
 __pycache__
 /test.py
 workspace.code-workspace
