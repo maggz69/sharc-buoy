@@ -154,9 +154,6 @@ def appendRowToBuffer(row):
 
     compressed_data.append(row)
 
-    if last_buffer_expunge_time != None:
-        print(f" Elapased time {current_time - (last_buffer_expunge_time)}")
-
     if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 10):
         compression_thread = threading.Thread(
             target=compressEncryptDataThread, args=([compressed_data]))
