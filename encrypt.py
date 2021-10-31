@@ -44,7 +44,7 @@ def decrypt(string_to_decrypt):
 
 def encryptFourierData(compressed_data):
     cipher = AES.new(key,AES.MODE_CBC,iv)
-    ciphertext = cipher.encrypt(pad(encrypt.convertStrToBytes(compressed_data),16))
+    ciphertext = cipher.encrypt(pad(convertStrToBytes(compressed_data),16))
 
     encrypted = b64encode(ciphertext)
     return encrypted

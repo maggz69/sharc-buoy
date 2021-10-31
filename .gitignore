@@ -4,3 +4,4 @@ encrypted_data.txt
 __pycache__
 test.py
 workspace.code-workspace
+encrypted_txt.txt

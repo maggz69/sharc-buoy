@@ -102,25 +102,28 @@ def writeRowToFile(file, time, gyro_data, mag_data, acc_data):
 
     file.write("\n")
 
+
 def writeEncryptedToFile(encrypted_data):
-    file = open('encrypted_txt.txt','a')
-    file.write(encrypted_data)
+    file = open('encrypted_txt.txt', 'a+')
+    file.write(str(encrypted_data))
     file.close()
 
     print("Encrypted data has been written")
 
+
 def compressEncryptDataThread(compressed_data):
     fourier_data = []
 
+    fourier_data = compress.compressRow(compressed_data)
     # Generate Fourier Data
-    for row in compressed_data:
-        fourier_data.append(compress.compressRow(row))
+    # for row in compressed_data:
+    # fourier_data.append(compress.compressRow(row))
 
     # Perform Low Pass
     fourier_lp = compress.lowPass(fourier_data)
 
     # Fourier Str
-    compressed_str = np.array_str(fourier_lp)
+    compressed_str = np.array_str(np.array(fourier_lp))
 
     encrypted_data = encrypt.encryptFourierData(compressed_str)
     writeEncryptedToFile(encrypted_data)
@@ -135,9 +138,13 @@ def appendRowToBuffer(row):
 
     compressed_data.append(row)
 
-    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 60 * 60):
+    if last_buffer_expunge_time != None:
+        print(f" Elapased time {current_time - (last_buffer_expunge_time)}")
+
+    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 10):
         compression_thread = threading.Thread(
-            target=compressEncryptDataThread, args=(compressed_data))
+            target=compressEncryptDataThread, args=([compressed_data]))
+        compression_thread.start()
         compressed_data = []
         last_buffer_expunge_time = current_time
 
@@ -145,7 +152,9 @@ def appendRowToBuffer(row):
 if __name__ == "__main__":
 
     # Determine whether to log data
-    logging_data = askToLogData()
+    # logging_data = askToLogData()
+
+    logging_data = False
 
     initialize()
 
@@ -179,4 +188,4 @@ if __name__ == "__main__":
             writeRowToFile(file=log_file, time=formatted_time, gyro_data=gyro_data,
                            acc_data=acc_data, mag_data=mag_data)
 
-        time.sleep(10)
+        time.sleep(2)
