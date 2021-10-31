@@ -1,16 +1,25 @@
+import numpy as np
+from scipy.fft import fft, fftfreq
+
 # Author: Mathew January, Pius Gumo
 # Compression algorithm v2
 
-def compressRow(dataRows):
-    ''' Return the fourier transform of 
-        the row(s) passed to the function
-    '''
-    compressed_row = []
 
-    for row in dataRows:
-        compressed_data.append(row)
-    
+def compressRow(dataRow):
+    ''' Return the fourier transform of 
+        the row passed to the function
+
+        dataRow list item containing the data elements to be parsed
+    '''
+
+    # Loop through the data list passed and fourier transform the data
+    # This is ideally similar to  gyro x,y,z : acc x,y,z
+
+    compressed_row_array = np.array(dataRow)
+    compressed_row = fft(compressed_row_array)
+
     return compressed_row
+
 
 def lowPass(fourier_data):
     ''' Perform low pass filtering on the fourier transformed
@@ -24,18 +33,18 @@ def lowPass(fourier_data):
         filtered_data.append(fourier_data[i])
     return filtered_data
 
-def performCompressionOnImuDataSet(imu_rows_data,imu_row_header):
+
+def performCompressionOnImuDataSet(imu_rows_data, imu_row_header):
     ''' Perform compression on a set of data retrieved from
         the IMU '''
-    
+
     fourier_data = []
 
     # perform fourier transform first
     for i in range(len(imu_rows_data)):
-        fourier_data[i] = compressRow(row)
-    
+        fourier_data[i] = compressRow(imu_rows_data[i])
+
     # perform lowpass on the fourier transforms
     filtered_data = lowPass(fourier_data)
 
     return filtered_data
-
