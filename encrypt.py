@@ -10,7 +10,8 @@ from Crypto.Util.Padding import pad
 key = b'0123456789012345'
 
 # Random Initialization Vector
-iv = Random.get_random_bytes(16)
+# iv = Random.get_random_bytes(16)
+iv = key
 
 def readFileAsString(file_path='compressed.txt'):
     file = open(file_path,"r",encoding='utf-8')
@@ -41,7 +42,15 @@ def decrypt(string_to_decrypt):
 
     return unpad(decrypted,16)
 
+def encryptFourierData(compressed_data):
+    cipher = AES.new(key,AES.MODE_CBC,iv)
+    ciphertext = cipher.encrypt(pad(encrypt.convertStrToBytes(compressed_data),16))
+
+    encrypted = b64encode(ciphertext)
+    return encrypted
+
 if __name__ == "__main__":
+    
     string_to_encrypt = readFileAsString()
 
     encrypted = encrypt(string_to_encrypt)
@@ -60,32 +69,6 @@ if __name__ == "__main__":
     # file.write("\n\n")
 
     # file.write(str(decrypted_decoded))
-    file.write("\n")
-
-    decrypted = decrypt(decrypted_decoded)
-    file.write(str(decrypted))
-    file.close()
-
-    print(decrypted)
-
-
-if __name__ == "__main2__":
-    string_to_encrypt = "The string I would like to encrypt"
-
-    encrypted = encrypt(string_to_encrypt)
-
-    encrypted_encoded = b64encode(encrypted)
-
-    file = open("encrypted.txt","w")
-    file.write(str(encrypted_encoded))
-    file.close()
-
-    file = open("decrypted.txt","a+")
-    decrypted_decoded = b64decode(encrypted_encoded)
-
-    file.write("\n\n")
-
-    file.write(str(decrypted_decoded))
     file.write("\n")
 
     decrypted = decrypt(decrypted_decoded)
