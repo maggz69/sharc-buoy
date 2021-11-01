@@ -177,7 +177,7 @@ if __name__ == "__main__":
     # Determine whether to log data
     logging_data = askToLogData()
 
-    logging_data = False
+    # logging_data = False
 
     initialize()
 
