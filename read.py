@@ -5,6 +5,7 @@ import encrypt
 import compress
 import numpy as np
 import sys
+import os
 
 global sensor
 
@@ -133,7 +134,12 @@ def compressEncryptDataThread(compressed_data):
     end_encrypt_time = time.perf_counter()
 
     # write to file in the following order (uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data)
-    file = open('timing_data.csv','a+')
+
+    if os.path.isfile('timing_data.csv') == False:
+        file = open('timing_data.csv','w')
+        file.write('uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data_size')
+        file.close()
+    file = open('timing_data.csv','a')
     file.write(str(sys.getsizeof(compressed_data)))
     file.write(',')
     file.write(str(sys.getsizeof(fourier_lp)))
