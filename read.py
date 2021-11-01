@@ -106,7 +106,9 @@ def writeRowToFile(file, time, gyro_data, mag_data, acc_data):
 
 def writeEncryptedToFile(encrypted_data):
     file = open('encrypted_txt.txt', 'a+')
-    file.write(str(encrypted_data))
+    encrypted_data = str(encrypted_data)
+    file.write(encrypted_data)
+    file.write('\n')
     file.close()
 
     print("Encrypted data has been written")
@@ -114,7 +116,6 @@ def writeEncryptedToFile(encrypted_data):
 
 def compressEncryptDataThread(compressed_data):
     fourier_data = []
-
 
     start_compress_time = time.perf_counter()
     fourier_data = compress.compressRow(compressed_data)
@@ -136,10 +137,11 @@ def compressEncryptDataThread(compressed_data):
     # write to file in the following order (uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data)
 
     if os.path.isfile('timing_data.csv') == False:
-        file = open('timing_data.csv','w')
-        file.write('uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data_size')
+        file = open('timing_data.csv', 'w')
+        file.write(
+            'uncompressed_data_size,compressed_data_size,compression_time,encryption_time\n')
         file.close()
-    file = open('timing_data.csv','a')
+    file = open('timing_data.csv', 'a')
     file.write(str(sys.getsizeof(compressed_data)))
     file.write(',')
     file.write(str(sys.getsizeof(fourier_lp)))
@@ -162,7 +164,7 @@ def appendRowToBuffer(row):
 
     compressed_data.append(row)
 
-    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 10):
+    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 5):
         compression_thread = threading.Thread(
             target=compressEncryptDataThread, args=([compressed_data]))
         compression_thread.start()
@@ -209,4 +211,4 @@ if __name__ == "__main__":
             writeRowToFile(file=log_file, time=formatted_time, gyro_data=gyro_data,
                            acc_data=acc_data, mag_data=mag_data)
 
-        time.sleep(2)
+        time.sleep(0.5)
