@@ -132,7 +132,7 @@ def compressEncryptDataThread(compressed_data):
     writeEncryptedToFile(encrypted_data)
     end_encrypt_time = time.perf_counter()
 
-    # write to file in the following order (uncompressed_data_size,compressed_data_size,compression_time,encryption_time)
+    # write to file in the following order (uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data)
     file = open('timing_data.csv','a+')
     file.write(str(sys.getsizeof(compressed_data)))
     file.write(',')
@@ -141,6 +141,8 @@ def compressEncryptDataThread(compressed_data):
     file.write(str(end_compress_time - start_compress_time))
     file.write(',')
     file.write(str(end_encrypt_time - end_compress_time))
+    file.write(',')
+    file.write(str(sys.getsizeof(encrypted_data)))
     file.write('\n')
     file.close
 
