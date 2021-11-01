@@ -1,12 +1,21 @@
 import time
 import imu
-import datetime
+import threading
+import encrypt
+import compress
+import numpy as np
+import sys
+import os
 
 global sensor
 
 
 def initialize():
-    global sensor
+    global sensor, compressed_data, last_buffer_expunge_time
+
+    last_buffer_expunge_time = None
+    compressed_data = []
+
     sensor = imu.ICM20948()
     print("Retrieving Data From IMU Sensor :)")
 
@@ -95,20 +104,95 @@ def writeRowToFile(file, time, gyro_data, mag_data, acc_data):
     file.write("\n")
 
 
+def writeEncryptedToFile(encrypted_data):
+    file = open('encrypted_txt.txt', 'a+')
+    encrypted_data = str(encrypted_data)
+    file.write(encrypted_data)
+    file.write('\n')
+    file.close()
+
+    print("Encrypted data has been written")
+
+
+def compressEncryptDataThread(compressed_data):
+    fourier_data = []
+
+    start_compress_time = time.perf_counter()
+    fourier_data = compress.compressRow(compressed_data)
+    # Generate Fourier Data
+    # for row in compressed_data:
+    # fourier_data.append(compress.compressRow(row))
+
+    # Perform Low Pass
+    fourier_lp = compress.lowPass(fourier_data)
+
+    # Fourier Str
+    compressed_str = np.array_str(np.array(fourier_lp))
+
+    end_compress_time = time.perf_counter()
+    encrypted_data = encrypt.encryptFourierData(compressed_str)
+    writeEncryptedToFile(encrypted_data)
+    end_encrypt_time = time.perf_counter()
+
+    # write to file in the following order (uncompressed_data_size,compressed_data_size,compression_time,encryption_time,encrypted_data)
+
+    if os.path.isfile('timing_data.csv') == False:
+        file = open('timing_data.csv', 'w')
+        file.write(
+            'uncompressed_data_size,compressed_data_size,compression_time,encryption_time\n')
+        file.close()
+    file = open('timing_data.csv', 'a')
+    file.write(str(sys.getsizeof(compressed_data)))
+    file.write(',')
+    file.write(str(sys.getsizeof(fourier_lp)))
+    file.write(',')
+    file.write(str(end_compress_time - start_compress_time))
+    file.write(',')
+    file.write(str(end_encrypt_time - end_compress_time))
+    file.write(',')
+    file.write(str(sys.getsizeof(encrypted_data)))
+    file.write('\n')
+    file.close
+
+    sys.exit()
+
+
+def appendRowToBuffer(row):
+    global compressed_data, last_buffer_expunge_time
+
+    current_time = time.perf_counter()
+
+    compressed_data.append(row)
+
+    if (last_buffer_expunge_time == None) or ((current_time - last_buffer_expunge_time) > 5):
+        compression_thread = threading.Thread(
+            target=compressEncryptDataThread, args=([compressed_data]))
+        compression_thread.start()
+        compressed_data = []
+        last_buffer_expunge_time = current_time
+
+
 if __name__ == "__main__":
-    
+
     # Determine whether to log data
     logging_data = askToLogData()
-    
+
+    # logging_data = False
+
     initialize()
 
     if(logging_data == True):
         log_file = open('imu_data.csv', 'w')
         log_file.write("Time,Gyrometer,Magnenometer,Accelerometer\n")
 
-    for i in range(60):
+    while True:
 
         [gyro_data, acc_data, mag_data] = readData()
+
+        # append data to buffer
+
+        appendRowToBuffer([gyro_data[0], gyro_data[1], gyro_data[2], acc_data[0],
+                          acc_data[1], acc_data[2], mag_data[0], mag_data[1], mag_data[2]])
 
         # print the current time in gmt
         ct = time.gmtime()
@@ -124,7 +208,7 @@ if __name__ == "__main__":
         print("")
 
         if(logging_data):
-            writeRowToFile(file=log_file,time=formatted_time, gyro_data=gyro_data,
+            writeRowToFile(file=log_file, time=formatted_time, gyro_data=gyro_data,
                            acc_data=acc_data, mag_data=mag_data)
 
-        time.sleep(1)
+        time.sleep(0.5)
